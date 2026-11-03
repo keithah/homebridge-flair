@@ -52,7 +52,7 @@
         "description": "Hides the Puck Rooms (thermostats)",
         "type": "boolean",
         "required": false,
-        "default": false
+        "default": true
       },
       "hidePrimaryStructure": {
         "title": "Hide primary structure",

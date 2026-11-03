@@ -7,7 +7,7 @@ import {
 } from 'homebridge';
 
 import {FlairPlatform} from './platform';
-import {Structure, StructureHeatCoolMode, Client} from '@ds-flair/flair-api-ts';
+import {Structure, StructureHeatCoolMode, Client} from 'flair-api-ts';
 
 /**
  * Platform Accessory

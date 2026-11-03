@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Flair",
   "name": "homebridge-flair",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Brings the flair smart vents into homekit",
   "license": "ISC",
   "repository": {
@@ -40,7 +40,8 @@
   ],
   "dependencies": {
     "class-transformer": "^0.5.1",
-    "@ds-flair/flair-api-ts": "0.0.0-development",
+    "flair-api-ts": "^1.0.31",
+    "moment": "^2.29.4",
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {

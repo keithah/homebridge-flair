@@ -19,10 +19,11 @@ import {
   StructureHeatCoolMode,
   Client,
   Model,
-} from '@ds-flair/flair-api-ts';
+} from 'flair-api-ts';
 import { plainToClass } from 'class-transformer';
 import { getRandomIntInclusive } from './utils';
 import {FlairStructurePlatformAccessory} from './structurePlatformAccessory';
+import { installFlairApiFixes } from './flairApiFix';
 
 /**
  * HomebridgePlatform
@@ -61,6 +62,9 @@ export class FlairPlatform implements DynamicPlatformPlugin {
     if (!this.validConfig()) {
       return;
     }
+
+    // Apply Flair API compatibility fixes before the client is used.
+    installFlairApiFixes();
 
     this.client = new Client(
       this.config.clientId,
@@ -271,11 +275,14 @@ export class FlairPlatform implements DynamicPlatformPlugin {
       promisesToResolve.push(this.addDevices(await this.client!.getVents()));
     }
 
-    if (!this.config.hidePrimaryStructure) {
+    // NB: Homebridge does not inject config.schema.json defaults into config.json,
+    // so an unset boolean arrives as `undefined`. Treat only an explicit `false`
+    // as opt-in, which keeps these guards consistent with the schema defaults.
+    if (this.config.hidePrimaryStructure === false) {
       promisesToResolve.push(this.addDevices([await this.client!.getPrimaryStructure()]));
     }
 
-    if (!this.config.hidePuckRooms) {
+    if (this.config.hidePuckRooms === false) {
       promisesToResolve.push(
         this.addDevices(
           (await this.client!.getRooms()).filter((value: Room) => {
@@ -285,7 +292,7 @@ export class FlairPlatform implements DynamicPlatformPlugin {
       );
     }
 
-    if (!this.config.hidePuckSensors) {
+    if (this.config.hidePuckSensors === false) {
       promisesToResolve.push(this.addDevices(await this.client!.getPucks()));
     }
 
@@ -310,6 +317,13 @@ export class FlairPlatform implements DynamicPlatformPlugin {
 
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of devices) {
+      // Guard against a malformed API response: a missing entry used to throw
+      // "Cannot read properties of undefined (reading 'id')" and crash startup.
+      if (!device || !device.id) {
+        this.log.warn('Skipping discovered device with no id:', JSON.stringify(device));
+        continue;
+      }
+
       // generate a unique id for the accessory this should be generated from
       // something globally unique, but constant, for example, the device serial
       // number or MAC address
